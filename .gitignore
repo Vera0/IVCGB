@@ -1,1 +1,5 @@
 .env
+instance.connect
+IVCGBSECSERT.pem
+values.py
+deployments.py
