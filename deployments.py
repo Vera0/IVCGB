@@ -16,3 +16,5 @@ sudo mv docker-compose-Linux-x86_64 /usr/local/bin/docker-compose
 sudo curl -L https://raw.githubusercontent.com/docker/compose/master/contrib/completion/bash/docker-compose -o /etc/bash_completion.d/docker-compose
 source /etc/bash_completion.d/docker-compose
 sudo yum install git
+git clone https://github.com/Vera0/IVCGB.git
+git checkout master
