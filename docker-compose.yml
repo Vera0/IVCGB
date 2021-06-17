@@ -1,50 +1,59 @@
-version: '3.3'
+version: '3.3' #Версия 3.3 не страдает багами с network
 
-services:
-  db:
-    image: mysql:8.0
-    container_name: db
-    restart: unless-stopped
-    env_file: .env
-    environment:
+services: #Укажем сервисы, их у нас будет 3 штуки, соединенные между собой - MySql>Wordpress>Nginx
+  db: #Первым делом зададим Базу Данных, без нее дело далеко не пойдет
+    image: mysql:8.0 #Укажем образ из докер-хаба, latest не желателен, при пересборке новая версия может критануть намертво
+    container_name: db #Название контейнера
+    restart: unless-stopped #Политика перезапуска - пока не остановится
+    env_file: .env #Подключим файл с секретными переменными, которые лежат в папке с манифестом Docker-compose
+    environment: #Укажем явные переменные окружения, которые не секретные - название БД
       - MYSQL_DATABASE=wordpress
-    volumes:
+    volumes: #Явно укажем том, в котором будут лежать данные БД
       - dbdata:/var/lib/mysql
-    command: '--default-authentication-plugin=mysql_native_password'
-    networks:
+    command: '--default-authentication-plugin=mysql_native_password' 
+#Данный параметр указывает команду, которая будет переопределять используемое по умолчанию значение инструкции CMD для образа.   
+#В нашем случае мы добавим параметр для стандартной команды mysqld образа Docker, которая запускает сервер MySQL в контейнере. 
+#Эта опция --default-authentication-plugin=mysql_native_password устанавливает для системной переменной --default-authentication-plugin 
+#значение mysql_native_password, которое указывает, какой механизм аутентификации должен управлять новыми запросами аутентификации для сервера. 
+#Поскольку PHP и наш образ WordPress не будут поддерживать новое значение аутентификации MySQL по умолчанию, 
+#мы должны внести изменения, чтобы выполнить аутентификацию пользователя базы данных приложения. @
+    networks: #Явно укажем сеть в которой будут общаться компоненты
       - app-network
-  wordpress:
-    depends_on:
+  wordpress: #Далее в очереди - Wordpress
+    depends_on: #Установим зависимость сборки от нашей БД MySql, если не соберется БД, на этом все закончится.
      - db
-    image: wordpress:5.1.1-fpm-alpine
-    container_name: wordpress
-    restart: unless-stopped
-    env_file: .env
-    environment:
+    image: wordpress:5.1.1-fpm-alpine #Укажем легковесный образ Alpine
+    container_name: wordpress #Имя нашего контейнера
+    restart: unless-stopped #Политика перезапуска
+    env_file: .env #Сюда мы тоже подключим файл с секретными переменными для общения с Базой данных
+    environment: #Явно зададим переменные окружения - имя контейнера БД:порт, пользователь, пароль, и название БД
       - WORDPRESS_DB_HOST=db:3306
       - WORDPRESS_DB_USER=$MYSQL_USER
       - WORDPRESS_DB_PASSWORD=$MYSQL_PASSWORD
       - WORDPRESS_DB_NAME=wordpress
-    volumes:
-      - wordpress:/var/www/html
-    networks:
+    volumes: #Примонтируем том, где будет лежать наш index.php
+      - wordpress:/var/www/html 
+    networks: #Указываем сеть общения компонентов между собой
       - app-network
-  webserver:
-    depends_on:
+  webserver: #Далее - вебсервер на nginx 
+    depends_on: #Зависит от Wordpress
       - wordpress
-    image: nginx:1.15.12-alpine
+    image: nginx:1.15.12-alpine 
     container_name: webserver
     restart: unless-stopped
     ports:
-      - "80:80"
-    volumes:
-      - wordpress:/var/www/html
+      - "80:80" #Пробросим порты 
+    volumes: 
+#Монтируем наш конфиг nginx который в папке репозитория, внутрь контейнера, 
+#таким образом нам будет проще его настраивать или менять перед сборкой,
+#так же укажем где будут лежать наши index.php это уже нужно для nginx'a
+      - wordpress:/var/www/html 
       - ./nginx-conf:/etc/nginx/conf.d
     networks:
       - app-network
 volumes:
   wordpress:
   dbdata:
-networks:
+networks: #Добавим ту самую сеть, которую мы прописывали в компонентах, вместо дефолтной.
   app-network:
     driver: bridge
