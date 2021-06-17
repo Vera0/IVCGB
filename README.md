@@ -11,9 +11,10 @@
 - CentOS 8 minimal (Linux server)
 - Docker (Docker-compose deploy)
 - Python (Deploy script)
+- PHP (Web-верстка)
 
 Все необходимые файлы для запуска стандартного экземпляра сборки и необходимая для развертывания информация есть в репозитории [Vera0/IVCGB](https://github.com/Vera0/IVCGB):
-- Deployment.py (Скрипт развертывания на сервере)
+- Deployment.sh (Скрипт развертывания на сервере)
 - Docker-compose (Docker-compose манифест для запуска экземпляра сборки на сервере)
 - nginx-conf (Отдельная папка с простым конфиг файлом web-сервера nginx)
 - .env (Файл с вынесенными переменными для MySql и Wordpress)
